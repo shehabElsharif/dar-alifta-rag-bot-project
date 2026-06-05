@@ -145,35 +145,17 @@ def api_chat(request):
             logger.info("Step 4: No matching fatwas met the similarity threshold. Triggering direct fallback.")
             response_text = official_fallback
         else:
-            logger.info(f"Step 4 Complete: Context prepared with {len(cleaned_sources)} sources.")
-            logger.info("Step 5: Sending prompt and fatwa context to Llama 3.1 for answer generation...")
-            response_text = llm_service.generate_fatwa_response(user_message, cleaned_sources)
-            
-            # Safeguard: ensure response_text is a string
-            if isinstance(response_text, dict):
-                response_text = response_text.get("response", str(response_text))
+            logger.info("Step 5: Calling LLM with fatwa context for structured JSON answer...")
+            llm_result = llm_service.generate_fatwa_response(user_message, cleaned_sources)
+            logger.info(f"Step 5 Complete: LLM responded with found={llm_result['found']}.")
+
+            if llm_result["found"] and llm_result["answer"]:
+                logger.info("Context was sufficient. Using LLM answer.")
+                response_text = llm_result["answer"]
             else:
-                response_text = str(response_text or "")
-                
-            logger.info(f"Step 5 Complete: LLM response received. Response length: {len(response_text)} chars.")
-            
-            # Post-process LLM response for soft/partial fallback triggers
-            logger.info("Step 6: Post-processing response text for potential fallback replacements...")
-            lower_response = response_text.lower()
-            fallback_keywords = ["عذراً", "أعتذر", "لم أجد", "لا يوجد", "لا تحتوي", "not_found", "null"]
-            
-            triggered = False
-            for kw in fallback_keywords:
-                if kw in lower_response:
-                    logger.info(f"  - Fallback keyword '{kw}' detected in LLM response.")
-                    triggered = True
-                    break
-                    
-            if triggered:
-                logger.info("Fallback triggered. Overwriting LLM output with the official fallback message.")
+                logger.info("LLM signalled context insufficient (found=False). Triggering official fallback.")
                 response_text = official_fallback
-            else:
-                logger.info("No fallback triggered. Keeping LLM generated answer.")
+                cleaned_sources = []  # don't show source cards when falling back
             
         logger.info("=" * 60)
         logger.info(f"FINAL OUTGOING RESPONSE: '{response_text[:150]}...'")

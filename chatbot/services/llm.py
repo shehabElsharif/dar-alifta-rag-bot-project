@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import logging
 import requests
@@ -125,21 +126,27 @@ class LLMService:
             return response
             
         return "مرحباً بك. أنا المساعد الذكي لدار الإفتاء الليبية. كيف يمكنني مساعدتك اليوم في الاستفسارات الشرعية والفقهية؟"
-    def generate_fatwa_response(self, user_message: str, fatwas: list) -> str:
+
+    def generate_fatwa_response(self, user_message: str, fatwas: list) -> dict:
         """
-        Generates an answer based on the provided fatwas using the official strict system prompt.
+        Generates an answer based on the provided fatwas.
+        Returns a dict: {"found": True/False, "answer": "..."}
+        - found=True  → context was sufficient; answer contains the fatwa-based response.
+        - found=False → context was insufficient; caller should use the official fallback.
         """
         system_instructions = (
             "أنت المساعد الذكي الرسمي والممثل لجهة \"دار الإفتاء الليبية\".\n"
             "مهمتك الأساسية والوحيدة هي الإجابة عن أسئلة واستفسارات المستخدمين الفقهية والشرعية باللغة العربية الفصحى، وبدقة ومهنية عالية.\n\n"
             "يجب عليك الالتزام المطلق بالقواعد التالية:\n"
-            "1. الاعتماد حصراً على نصوص الفتاوى المقدمة لك في قسم \"سياق الفتاوى\" أدناه. يمنع منعاً باتاً اختراع، أو تأليف، أو استنتاج أي أحكام فقهية من معلوماتك العامة خارج هذا السياق.\n"
-            "2. إذا كان السياق المقدم لا يحتوي على إجابة واضحة وشافية لسؤال المستخدم، يجب عليك الاعتذار بأدب والقول: \"عذراً، لم أتمكن من العثور على فتوى مسجلة ومطابقة لسؤالك في قاعدة بيانات دار الإفتاء الحالية. يرجى صياغة السؤال بشكل مختلف أو استشارة أحد المفتين مباشرة.\"\n"
-            "3. اجعل إجابتك واضحة، سهلة الفهم، ومباشرة.\n"
-            "4. لزيادة الموثوقية، احرص دائماً على الإشارة لمصدر الفتوى (مثل إرفاق الرابط أو عنوان الفتوى) بناءً على ما هو متوفر في السياق.\n"
-            "5. تحدث دائماً بصفة الاحترام والتقدير للسائل.\n"
+            "1. الاعتماد حصراً على نصوص الفتاوى المقدمة لك في قسم \"سياق الفتاوى\" أدناه. يمنع منعاً باتاً اختراع أو تأليف أي أحكام فقهية من معلوماتك العامة خارج هذا السياق.\n"
+            "2. اجعل إجابتك واضحة، سهلة الفهم، ومباشرة.\n"
+            "3. لزيادة الموثوقية، احرص دائماً على الإشارة لمصدر الفتوى (رابطها أو عنوانها) بناءً على ما هو متوفر في السياق.\n"
+            "4. تحدث دائماً بصفة الاحترام والتقدير للسائل.\n\n"
+            "يجب أن يكون ردك حصرياً بصيغة JSON صالحة (Valid JSON) فقط، بدون أي نص أو علامات اقتباس برمجية خارجها:\n"
+            "- إذا كان السياق يحتوي على إجابة واضحة وشافية: {\"found\": true, \"answer\": \"إجابتك الكاملة هنا بالعربية الفصحى\"}\n"
+            "- إذا كان السياق لا يحتوي على إجابة كافية لسؤال المستخدم: {\"found\": false, \"answer\": \"\"}\n"
         )
-        
+
         # Build context from matched fatwas
         context_parts = []
         for i, fatwa in enumerate(fatwas):
@@ -164,8 +171,56 @@ class LLMService:
             {"role": "user", "content": f"السؤال الموجه من المستخدم:\n{user_message}"}
         ]
         
-        response = self._call_llm(messages)
-        if response:
-            return response
-            
-        return "عذراً، حدث خطأ أثناء معالجة الإجابة. يرجى المحاولة مرة أخرى."
+        raw = self._call_llm(messages)
+        if not raw:
+            logger.error("LLM returned no response for fatwa generation.")
+            return {"found": False, "answer": ""}
+
+        # If the gateway already parsed it as a dict, use it directly
+        if isinstance(raw, dict):
+            return {"found": bool(raw.get("found", False)), "answer": str(raw.get("answer", ""))}
+
+        # Otherwise strip markdown fences and parse JSON
+        clean = str(raw).strip()
+        if clean.startswith("```json"):
+            clean = clean[7:]
+        if clean.startswith("```"):
+            clean = clean[3:]
+        if clean.endswith("```"):
+            clean = clean[:-3]
+        clean = clean.strip()
+
+        try:
+            result = json.loads(clean)
+            return {"found": bool(result.get("found", False)), "answer": str(result.get("answer", ""))}
+        except Exception as e:
+            logger.warning(f"Strict JSON parse failed (likely unescaped quotes in answer): {e}. Attempting regex extraction...")
+
+            # Stage 2: regex extraction — robust against unescaped quotes inside the answer.
+            # Extract "found" value
+            found = True
+            found_match = re.search(r'"found"\s*:\s*(true|false)', clean, re.IGNORECASE)
+            if found_match:
+                found = found_match.group(1).lower() == "true"
+
+            # Extract everything after the first occurrence of '"answer": "'
+            answer = ""
+            answer_marker = '"answer": "'
+            if answer_marker in clean:
+                after_marker = clean.split(answer_marker, 1)[1]
+                # Strip trailing closing JSON characters from the end
+                # Walk backwards to drop the final '"' or '"}'
+                after_marker = after_marker.rstrip()
+                if after_marker.endswith('"}'):
+                    after_marker = after_marker[:-2]
+                elif after_marker.endswith('"'):
+                    after_marker = after_marker[:-1]
+                answer = after_marker.strip()
+
+            if answer:
+                logger.info(f"Regex extraction succeeded. found={found}, answer length={len(answer)}")
+                return {"found": found, "answer": answer}
+
+            # Stage 3: last resort — the LLM ignored JSON entirely; use the raw text as the answer.
+            logger.warning("Regex extraction also failed. Returning raw text as answer.")
+            return {"found": True, "answer": clean}
