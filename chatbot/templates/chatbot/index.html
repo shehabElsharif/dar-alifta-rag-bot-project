@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دار الإفتاء الليبية - المساعد الفقهي الذكي</title>
+    
+    <!-- Google Fonts: Cairo, Amiri & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Outfit:wght@300;400;600;800&family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Marked JS for Client-side Markdown Rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        :root {
+            /* HSL Color Palette - Islamic Deep Green & Gold */
+            --bg-color: HSL(220, 24%, 6%);
+            --header-bg: HSL(220, 24%, 4%);
+            --card-bg: HSL(220, 20%, 10%);
+            --card-glass: hsla(220, 20%, 10%, 0.75);
+            --border-color: HSL(160, 20%, 14%);
+            
+            --primary-emerald: HSL(160, 84%, 14%);
+            --primary-emerald-hover: HSL(160, 84%, 18%);
+            --primary-emerald-glow: hsla(160, 84%, 14%, 0.35);
+            
+            --accent-gold: HSL(45, 90%, 55%);
+            --accent-gold-hover: HSL(45, 90%, 65%);
+            --accent-gold-glow: hsla(45, 90%, 55%, 0.25);
+            
+            --text-main: HSL(0, 0%, 94%);
+            --text-muted: HSL(220, 10%, 65%);
+            --text-glow: hsla(0, 0%, 94%, 0.05);
+
+            --user-bubble: HSL(215, 60%, 15%);
+            --bot-bubble: HSL(160, 50%, 10%);
+            
+            /* Animations & Radius */
+            --radius-lg: 20px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-emerald) var(--bg-color);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-emerald);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-emerald-hover);
+        }
+
+        body {
+            font-family: 'Cairo', 'Amiri', 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Main Container */
+        .app-container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, var(--bg-color) 0%, HSL(220, 24%, 3%) 100%);
+            position: relative;
+        }
+
+        /* Chat Area Full Width Layout */
+        .chat-area {
+            flex-grow: 1;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Header Style */
+        .chat-header {
+            height: 75px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            background-color: hsla(220, 24%, 4%, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 10;
+        }
+
+        .bot-status {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .bot-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-emerald) 0%, var(--accent-gold) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--border-color);
+            box-shadow: 0 0 15px var(--primary-emerald-glow);
+        }
+
+        .bot-avatar i {
+            color: var(--text-main);
+            font-size: 20px;
+        }
+
+        .status-info h2 {
+            font-size: 16px;
+            font-weight: 700;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: var(--accent-gold);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-gold);
+            border-radius: 50%;
+            animation: pulse 1.8s infinite;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 16px;
+        }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 18px;
+            cursor: pointer;
+            transition: var(--transition);
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-icon:hover {
+            color: var(--accent-gold);
+            background-color: var(--card-bg);
+        }
+
+        /* Message Logs */
+        .chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+            width: 100%;
+        }
+
+        /* Chat content wrapper to keep reading width centered */
+        .chat-width-wrapper {
+            width: 100%;
+            max-width: 850px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        /* Welcome Message Screen */
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            margin: auto;
+            max-width: 750px;
+            padding: 20px;
+            animation: fadeIn 0.6s ease;
+        }
+
+        .welcome-logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .welcome-logo {
+            font-size: 52px;
+            color: var(--accent-gold);
+            text-shadow: 0 0 20px var(--accent-gold-glow);
+            animation: bounce 3s infinite;
+        }
+
+        .welcome-title-group h3 {
+            font-size: 28px;
+            font-weight: 700;
+            font-family: 'Amiri', serif;
+            color: var(--text-main);
+            text-align: right;
+        }
+
+        .welcome-title-group p {
+            font-size: 14px;
+            color: var(--text-muted);
+            text-align: right;
+            margin-top: 4px;
+        }
+
+        .welcome-intro {
+            font-size: 15px;
+            color: var(--text-muted);
+            line-height: 1.8;
+            margin-bottom: 36px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 24px;
+            text-align: center;
+        }
+
+        /* Grid for Suggested Queries */
+        .suggested-queries-section {
+            width: 100%;
+        }
+
+        .suggested-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent-gold);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-transform: uppercase;
+        }
+
+        .queries-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            width: 100%;
+        }
+
+        .query-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 18px;
+            cursor: pointer;
+            text-align: right;
+            transition: var(--transition);
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-muted);
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+        }
+
+        .query-card i {
+            color: var(--accent-gold);
+            margin-top: 4px;
+            font-size: 16px;
+        }
+
+        .query-card:hover {
+            border-color: var(--accent-gold);
+            background-color: var(--primary-emerald-glow);
+            color: var(--text-main);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px var(--primary-emerald-glow);
+        }
+
+        /* Chat Bubbles */
+        .message-row {
+            display: flex;
+            width: 100%;
+            gap: 18px;
+            animation: slideUp 0.3s ease forwards;
+        }
+
+        .message-row.user-row {
+            justify-content: flex-start;
+            flex-direction: row-reverse;
+        }
+
+        .message-bubble {
+            max-width: 80%;
+            padding: 18px 24px;
+            border-radius: var(--radius-lg);
+            font-size: 14.5px;
+            line-height: 1.8;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .user-row .message-bubble {
+            background-color: var(--user-bubble);
+            border-top-right-radius: 4px;
+            border: 1px solid HSL(215, 60%, 20%);
+            color: var(--text-main);
+        }
+
+        .bot-row .message-bubble {
+            background-color: var(--card-glass);
+            border: 1px solid var(--border-color);
+            border-top-left-radius: 4px;
+            backdrop-filter: blur(10px);
+            color: var(--text-main);
+        }
+
+        .message-meta {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .user-row .message-meta {
+            justify-content: flex-end;
+        }
+
+        /* Markdown Styles in Bot responses */
+        .message-bubble p {
+            margin-bottom: 12px;
+        }
+        .message-bubble p:last-child {
+            margin-bottom: 0;
+        }
+        .message-bubble ul, .message-bubble ol {
+            padding-right: 24px;
+            margin-bottom: 12px;
+        }
+        .message-bubble li {
+            margin-bottom: 6px;
+        }
+        .message-bubble blockquote {
+            border-right: 4px solid var(--accent-gold);
+            padding: 10px 16px;
+            background-color: rgba(255, 255, 255, 0.04);
+            border-radius: var(--radius-sm);
+            margin-bottom: 12px;
+            font-family: 'Amiri', serif;
+            font-size: 16px;
+            line-height: 1.8;
+        }
+
+        .message-bubble a {
+            color: var(--accent-gold);
+            text-decoration: underline;
+            transition: var(--transition);
+        }
+
+        .message-bubble a:hover {
+            color: var(--accent-gold-hover);
+        }
+
+        /* Citations and Sources Display */
+        .sources-container {
+            margin-top: 18px;
+            border-top: 1px dashed var(--border-color);
+            padding-top: 16px;
+        }
+
+        .sources-header {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent-gold);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sources-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .source-card {
+            background-color: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 12px 18px;
+            transition: var(--transition);
+        }
+
+        .source-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .source-title {
+            color: var(--text-main);
+            text-decoration: none;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .source-title:hover {
+            color: var(--accent-gold);
+        }
+
+        .source-similarity {
+            font-size: 10px;
+            color: var(--accent-gold);
+            background-color: var(--accent-gold-glow);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .source-snippet {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Loading Animation */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background-color: var(--text-muted);
+            border-radius: 50%;
+            animation: bounce-dots 1.4s infinite ease-in-out both;
+        }
+
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+
+        /* Input Controls Centered Box */
+        .chat-input-container {
+            padding: 24px 40px;
+            background-color: hsla(220, 24%, 4%, 0.85);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            z-index: 10;
+        }
+
+        .input-width-wrapper {
+            width: 100%;
+            max-width: 850px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 8px 20px;
+            gap: 14px;
+            transition: var(--transition);
+            width: 100%;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 15px var(--accent-gold-glow);
+        }
+
+        .chat-input {
+            flex-grow: 1;
+            background: none;
+            border: none;
+            color: var(--text-main);
+            font-family: 'Cairo', sans-serif;
+            font-size: 14.5px;
+            padding: 10px 0;
+            outline: none;
+            resize: none;
+            height: 42px;
+            max-height: 140px;
+            line-height: 1.5;
+        }
+
+        .chat-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .btn-send {
+            background: linear-gradient(135deg, var(--primary-emerald) 0%, var(--primary-emerald-hover) 100%);
+            border: none;
+            color: var(--text-main);
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px var(--primary-emerald-glow);
+        }
+
+        .btn-send:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 14px var(--primary-emerald-glow);
+        }
+
+        .btn-send:active {
+            transform: scale(0.95);
+        }
+
+        .input-note {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .input-note i {
+            color: var(--accent-gold);
+        }
+
+        /* Animations Keyframes */
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(224, 180, 76, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(224, 180, 76, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(224, 180, 76, 0); }
+        }
+
+        @keyframes bounce-dots {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-8px); }
+            60% { transform: translateY(-4px); }
+        }
+
+        /* Mobile Responsive Grid Adjustments */
+        @media (max-width: 768px) {
+            .queries-grid {
+                grid-template-columns: 1fr;
+            }
+            .chat-header {
+                padding: 0 20px;
+            }
+            .chat-messages {
+                padding: 20px;
+            }
+            .message-bubble {
+                max-width: 90%;
+            }
+            .chat-input-container {
+                padding: 16px 20px;
+            }
+            .welcome-logo-container {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .welcome-title-group h3, .welcome-title-group p {
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+
+        <!-- Main Chat Panel (100% Screen Width) -->
+        <main class="chat-area">
+            
+            <header class="chat-header">
+                <div class="bot-status">
+                    <div class="bot-avatar">
+                        <i class="fa-solid fa-kaaba"></i>
+                    </div>
+                    <div class="status-info">
+                        <h2>المفتي الرقمي</h2>
+                        <div class="status-indicator">
+                            <div class="status-dot"></div>
+                            <span>قاعدة فتاوى دار الإفتاء متصلة</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="header-actions">
+                    <button class="btn-icon" id="clearChat" title="مسح المحادثة">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                    <button class="btn-icon" onclick="window.open('https://ifta.ly', '_blank')" title="موقع دار الإفتاء الرسمي">
+                        <i class="fa-solid fa-globe"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Chat messages box -->
+            <div class="chat-messages" id="chatMessages">
+                <div class="chat-width-wrapper" id="chatWidthWrapper">
+                    
+                    <!-- Welcome Screen -->
+                    <div class="welcome-screen" id="welcomeScreen">
+                        <div class="welcome-logo-container">
+                            <i class="fa-solid fa-mosque welcome-logo"></i>
+                            <div class="welcome-title-group">
+                                <h3>دار الإفتاء الليبية</h3>
+                                <p>المساعد الفقهي الذكي (RAG)</p>
+                            </div>
+                        </div>
+                        
+                        <p class="welcome-intro">
+                            أنا مساعد فقهي ذكي للبحث في أرشيف فتاوى دار الإفتاء الليبية الرسمية. 
+                            أستطيع الإجابة عن أسئلتك وتزويدك بأحكام فقهية موثقة ومستندة مباشرة إلى فتاوى الدار الرسمية مع إرفاق الروابط المرجعية للتحقق.
+                        </p>
+                        
+                        <!-- Grid of Suggested Questions -->
+                        <div class="suggested-queries-section">
+                            <h2 class="suggested-title">
+                                <i class="fa-regular fa-lightbulb"></i> أسئلة استرشادية مقترحة
+                            </h2>
+                            <div class="queries-grid" id="suggestedQueries">
+                                <div class="query-card" data-query="ما حكم الحبس على الذكور دون الإناث في الميراث أو الأحباس؟">
+                                    <i class="fa-solid fa-book-open"></i>
+                                    <div>ما حكم الحبس على الذكور دون الإناث في الميراث أو الأحباس؟</div>
+                                </div>
+                                <div class="query-card" data-query="كيف تُوزع التركة إذا توفي رجل وترك زوجة وأربعة أبناء وبنت؟">
+                                    <i class="fa-solid fa-scale-balanced"></i>
+                                    <div>كيف تُوزع التركة إذا توفي رجل وترك زوجة وأربعة أبناء وبنت؟</div>
+                                </div>
+                                <div class="query-card" data-query="ما شروط صحة الوصية لغير الوارث وهل تجوز للوارث؟">
+                                    <i class="fa-solid fa-pen-nib"></i>
+                                    <div>ما شروط صحة الوصية لغير الوارث وهل تجوز للوارث؟</div>
+                                </div>
+                                <div class="query-card" data-query="ما حكم البيع بالتقسيط مع زيادة السعر مقابل الأجل؟">
+                                    <i class="fa-solid fa-coins"></i>
+                                    <div>ما حكم البيع بالتقسيط مع زيادة السعر مقابل الأجل؟</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+
+            <!-- Chat input form -->
+            <div class="chat-input-container">
+                <div class="input-width-wrapper">
+                    <div class="input-wrapper">
+                        <textarea class="chat-input" id="chatInput" placeholder="اكتب سؤالك الفقهي أو الشرعي هنا..." rows="1"></textarea>
+                        <button class="btn-send" id="btnSend" title="إرسال السؤال">
+                            <i class="fa-solid fa-paper-plane-invert fa-rotate-180"></i>
+                        </button>
+                    </div>
+                    <div class="input-note">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>تنبيه: هذا المساعد يبحث في فتاوى دار الإفتاء الليبية فقط ولا يقوم باستنتاج أحكام جديدة خارج السياق المرفق.</span>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        const chatWidthWrapper = document.getElementById('chatWidthWrapper');
+        const chatInput = document.getElementById('chatInput');
+        const btnSend = document.getElementById('btnSend');
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const clearChat = document.getElementById('clearChat');
+        const suggestedQueries = document.getElementById('suggestedQueries');
+
+        // Configure marked properties to allow target blank on links
+        // Supporting both newer object-based argument signature and legacy positional parameters
+        const renderer = new marked.Renderer();
+        renderer.link = function(first, second, third) {
+            let href, title, text;
+            if (first && typeof first === 'object') {
+                href = first.href;
+                title = first.title;
+                text = first.text;
+            } else {
+                href = first;
+                title = second;
+                text = third;
+            }
+            return `<a href="${href}" target="_blank" rel="noopener noreferrer">${text || href}</a>`;
+        };
+        // Configure marked options safely for both modern and legacy versions
+        const markedConfig = {
+            renderer: renderer,
+            breaks: true
+        };
+        if (typeof marked.use === 'function') {
+            marked.use(markedConfig);
+        } else if (typeof marked.setOptions === 'function') {
+            marked.setOptions(markedConfig);
+        }
+
+        // Event Listeners
+        btnSend.addEventListener('click', sendMessage);
+        
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        clearChat.addEventListener('click', () => {
+            chatWidthWrapper.innerHTML = '';
+            chatWidthWrapper.appendChild(welcomeScreen);
+            welcomeScreen.style.display = 'flex';
+        });
+
+        // Click handler for suggested queries
+        suggestedQueries.addEventListener('click', (e) => {
+            const card = e.target.closest('.query-card');
+            if (card) {
+                const queryText = card.dataset.query;
+                chatInput.value = queryText;
+                sendMessage();
+            }
+        });
+
+        // Adjust Textarea Height automatically based on typing content
+        chatInput.addEventListener('input', () => {
+            chatInput.style.height = 'auto';
+            chatInput.style.height = (chatInput.scrollHeight) + 'px';
+        });
+
+        // Send Message Function
+        async function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            // Clear input text and restore default height
+            chatInput.value = '';
+            chatInput.style.height = '42px';
+
+            // Hide welcome screen
+            if (welcomeScreen && welcomeScreen.parentNode) {
+                welcomeScreen.style.display = 'none';
+            }
+
+            // Append User Message
+            appendMessage('user', message);
+            scrollChatToBottom();
+
+            // Append Bot Loading State
+            const loadingBubbleId = appendLoadingBubble();
+            scrollChatToBottom();
+
+            try {
+                // Fetch response from server
+                const response = await fetch('/api/chat/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+
+                const data = await response.json();
+                
+                // Remove Loading Bubble
+                removeLoadingBubble(loadingBubbleId);
+
+                if (response.ok) {
+                    appendMessage('bot', data.response, data.sources);
+                } else {
+                    appendMessage('bot', `عذراً، حدث خطأ ما: ${data.error || 'يرجى المحاولة مجدداً.'}`);
+                }
+            } catch (error) {
+                console.error('Error fetching chat API:', error);
+                removeLoadingBubble(loadingBubbleId);
+                appendMessage('bot', 'عذراً، تعذر الاتصال بالخادم الفقهي. يرجى التحقق من اتصال الشبكة وإعادة المحاولة.');
+            }
+            
+            scrollChatToBottom();
+        }
+
+        // Helper to append chat bubble to list
+        function appendMessage(sender, text, sources = []) {
+            const messageRow = document.createElement('div');
+            messageRow.className = `message-row ${sender}-row`;
+
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            
+            // Format current Libyan local time
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('ar-LY', { hour: '2-digit', minute: '2-digit' });
+
+            if (sender === 'user') {
+                bubble.innerText = text;
+                bubble.innerHTML += `
+                    <div class="message-meta">
+                        <span>${timeString}</span>
+                        <i class="fa-regular fa-circle-user"></i>
+                    </div>
+                `;
+            } else {
+                // Render Markdown response on the bot side
+                const formattedHtml = marked.parse(text);
+                bubble.innerHTML = formattedHtml;
+                
+                // Append citation cards if sources are returned
+                if (sources && sources.length > 0) {
+                    const sourcesHtml = buildSourcesHtml(sources);
+                    bubble.innerHTML += sourcesHtml;
+                }
+
+                bubble.innerHTML += `
+                    <div class="message-meta">
+                        <i class="fa-solid fa-kaaba"></i>
+                        <span>${timeString}</span>
+                    </div>
+                `;
+            }
+
+            messageRow.appendChild(bubble);
+            chatWidthWrapper.appendChild(messageRow);
+        }
+
+        // Helper to construct HTML for citations / references
+        function buildSourcesHtml(sources) {
+            let html = `
+                <div class="sources-container">
+                    <div class="sources-header">
+                        <i class="fa-solid fa-scroll"></i>
+                        <span>الفتاوى المستند إليها فقهياً (${sources.length}) :</span>
+                    </div>
+                    <div class="sources-list">
+            `;
+
+            sources.forEach(source => {
+                const title = source.title || 'فتوى غير معنونة';
+                const percentage = Math.round(source.similarity * 100);
+                const snippet = source.content || '';
+                const link = source.link || 'https://ifta.ly';
+
+                html += `
+                    <div class="source-card">
+                        <div class="source-card-header">
+                            <a href="${link}" class="source-title" target="_blank" rel="noopener noreferrer">
+                                <i class="fa-solid fa-up-right-from-square"></i> ${title}
+                            </a>
+                            <span class="source-similarity">${percentage}% تطابق</span>
+                        </div>
+                        <div class="source-snippet">${snippet}</div>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
+            return html;
+        }
+
+        // Helper to append a loading placeholder bubble
+        function appendLoadingBubble() {
+            const id = 'loading_' + Math.random().toString(36).substr(2, 9);
+            const messageRow = document.createElement('div');
+            messageRow.className = 'message-row bot-row';
+            messageRow.id = id;
+
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            bubble.innerHTML = `
+                <div class="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            `;
+
+            messageRow.appendChild(bubble);
+            chatWidthWrapper.appendChild(messageRow);
+            return id;
+        }
+
+        // Helper to remove loading placeholder bubble
+        function removeLoadingBubble(id) {
+            const bubble = document.getElementById(id);
+            if (bubble) {
+                bubble.remove();
+            }
+        }
+
+        // Scroll chat interface to bottom
+        function scrollChatToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    </script>
+
+</body>
+</html>
