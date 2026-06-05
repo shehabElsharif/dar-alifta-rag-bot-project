@@ -63,6 +63,10 @@ def api_chat(request):
     logger.info(f"INCOMING REQUEST: User Message = '{user_message}'")
     logger.info("=" * 60)
 
+    intent = "UNKNOWN"
+    response_text = ""
+    cleaned_sources = []
+
     try:
         llm_service = get_llm_service()
         
@@ -76,13 +80,6 @@ def api_chat(request):
             logger.info("Calling LLM to generate warm welcome response...")
             response_text = llm_service.generate_general_response(user_message)
             logger.info(f"Greeting response generated successfully: '{response_text}'")
-            logger.info("Sending response to client.")
-            logger.info("=" * 60)
-            return JsonResponse({
-                "response": response_text,
-                "intent": intent,
-                "sources": []
-            })
             
         elif intent == "OUT_OF_SCOPE":
             logger.info("Intent is OUT_OF_SCOPE. Bypassing RAG search database step and returning refusal.")
@@ -90,73 +87,85 @@ def api_chat(request):
                 "عذراً، أنا مساعد فقهي مخصص للإجابة عن الأسئلة الشرعية والفقهية بناءً على فتاوى دار الإفتاء الليبية الرسمية فقط. "
                 "لا يمكنني الإجابة عن الأسئلة العامة أو الاستفسارات الخارجة عن هذا النطاق."
             )
-            logger.info("Sending out-of-scope refusal to client.")
-            logger.info("=" * 60)
-            return JsonResponse({
-                "response": response_text,
-                "intent": intent,
-                "sources": []
-            })
             
-        # 2. FATWA_QUERY: Proceed with RAG
-        logger.info("Intent is FATWA_QUERY. Initiating RAG process.")
-        embedding_service = get_embedding_service()
-        supabase_service = get_supabase_service()
-        
-        # Generate query embedding
-        logger.info("Step 2: Vectorizing user query using Cloudflare BGE-M3...")
-        query_embedding = embedding_service.get_embedding(user_message)
-        if not query_embedding:
-            logger.error("Step 2 Failed: Could not generate vector embedding for the query.")
-            response_text = "عذراً، واجهنا مشكلة في معالجة طلبك حالياً (فشل في استخراج المتجهات). يرجى المحاولة لاحقاً."
-            return JsonResponse({
-                "response": response_text,
-                "intent": "ERROR",
-                "sources": []
-            })
-        logger.info(f"Step 2 Complete: Embedding generated successfully. Vector length: {len(query_embedding)}")
-            
-        # Search similar fatwas
-        logger.info("Step 3: Querying Supabase pgvector 'match_fatwas' RPC (threshold=0.30, count=3)...")
-        fatwas = supabase_service.search_similar_fatwas(query_embedding, match_threshold=0.30, match_count=3)
-        logger.info(f"Step 3 Complete: Supabase similarity search completed. Retrieved {len(fatwas)} fatwas.")
-        
-        # Format sources for user visibility (exluding the large embedding vector)
-        cleaned_sources = []
-        for i, fatwa in enumerate(fatwas):
-            similarity_pct = int(fatwa.get("similarity", 0) * 100)
-            logger.info(f"  - Source [{i+1}] ID: {fatwa.get('id')} | Title: '{fatwa.get('title')}' | Similarity: {similarity_pct}%")
-            cleaned_sources.append({
-                "id": fatwa.get("id"),
-                "title": fatwa.get("title"),
-                "content": fatwa.get("content"),
-                "link": fatwa.get("link"),
-                "similarity": fatwa.get("similarity")
-            })
-            
-        # 3. Generate answer based on context
-        logger.info("Step 4: Preparing prompt and context for answer generation...")
-        official_fallback = (
-            "عذراً، لم أتمكن من العثور على فتوى مسجلة ومطابقة لسؤالك في قاعدة بيانات دار الإفتاء الحالية. "
-            "يرجى صياغة السؤال بشكل مختلف أو استشارة أحد المفتين مباشرة."
-        )
-
-        if not cleaned_sources:
-            logger.info("Step 4: No matching fatwas met the similarity threshold. Triggering direct fallback.")
-            response_text = official_fallback
         else:
-            logger.info("Step 5: Calling LLM with fatwa context for structured JSON answer...")
-            llm_result = llm_service.generate_fatwa_response(user_message, cleaned_sources)
-            logger.info(f"Step 5 Complete: LLM responded with found={llm_result['found']}.")
-
-            if llm_result["found"] and llm_result["answer"]:
-                logger.info("Context was sufficient. Using LLM answer.")
-                response_text = llm_result["answer"]
-            else:
-                logger.info("LLM signalled context insufficient (found=False). Triggering official fallback.")
-                response_text = official_fallback
-                cleaned_sources = []  # don't show source cards when falling back
+            # 2. FATWA_QUERY: Proceed with RAG
+            logger.info("Intent is FATWA_QUERY. Initiating RAG process.")
+            embedding_service = get_embedding_service()
+            supabase_service = get_supabase_service()
             
+            # Generate query embedding
+            logger.info("Step 2: Vectorizing user query using Cloudflare BGE-M3...")
+            query_embedding = embedding_service.get_embedding(user_message)
+            if not query_embedding:
+                logger.error("Step 2 Failed: Could not generate vector embedding for the query.")
+                response_text = "عذراً، واجهنا مشكلة في معالجة طلبك حالياً (فشل في استخراج المتجهات). يرجى المحاولة لاحقاً."
+                intent = "ERROR"
+            else:
+                logger.info(f"Step 2 Complete: Embedding generated successfully. Vector length: {len(query_embedding)}")
+                
+                # Fetch threshold and limit settings dynamically
+                from chatbot.models import ChatBotSetting
+                try:
+                    match_threshold = float(ChatBotSetting.get_val("MATCH_THRESHOLD", "0.30"))
+                    match_count = int(ChatBotSetting.get_val("MATCH_COUNT", "3"))
+                except Exception as ex:
+                    logger.warning(f"Error loading dynamic setting values: {ex}. Using defaults.")
+                    match_threshold = 0.30
+                    match_count = 3
+                
+                # Search similar fatwas
+                logger.info(f"Step 3: Querying Supabase pgvector 'match_fatwas' RPC (threshold={match_threshold}, count={match_count})...")
+                fatwas = supabase_service.search_similar_fatwas(query_embedding, match_threshold=match_threshold, match_count=match_count)
+                logger.info(f"Step 3 Complete: Supabase similarity search completed. Retrieved {len(fatwas)} fatwas.")
+                
+                # Format sources for user visibility (excluding the large embedding vector)
+                for i, fatwa in enumerate(fatwas):
+                    similarity_pct = int(fatwa.get("similarity", 0) * 100)
+                    logger.info(f"  - Source [{i+1}] ID: {fatwa.get('id')} | Title: '{fatwa.get('title')}' | Similarity: {similarity_pct}%")
+                    cleaned_sources.append({
+                        "id": fatwa.get("id"),
+                        "title": fatwa.get("title"),
+                        "content": fatwa.get("content"),
+                        "link": fatwa.get("link"),
+                        "similarity": fatwa.get("similarity")
+                    })
+                    
+                # 3. Generate answer based on context
+                logger.info("Step 4: Preparing prompt and context for answer generation...")
+                official_fallback = (
+                    "عذراً، لم أتمكن من العثور على فتوى مسجلة ومطابقة لسؤالك في قاعدة بيانات دار الإفتاء الحالية. "
+                    "يرجى صياغة السؤال بشكل مختلف أو استشارة أحد المفتين مباشرة."
+                )
+
+                if not cleaned_sources:
+                    logger.info("Step 4: No matching fatwas met the similarity threshold. Triggering direct fallback.")
+                    response_text = official_fallback
+                else:
+                    logger.info("Step 5: Calling LLM with fatwa context for structured JSON answer...")
+                    llm_result = llm_service.generate_fatwa_response(user_message, cleaned_sources)
+                    logger.info(f"Step 5 Complete: LLM responded with found={llm_result['found']}.")
+
+                    if llm_result["found"] and llm_result["answer"]:
+                        logger.info("Context was sufficient. Using LLM answer.")
+                        response_text = llm_result["answer"]
+                    else:
+                        logger.info("LLM signalled context insufficient (found=False). Triggering official fallback.")
+                        response_text = official_fallback
+                        cleaned_sources = []  # don't show source cards when falling back
+
+        # Log search transaction to Django db analytics
+        try:
+            from chatbot.models import ChatLog
+            ChatLog.objects.create(
+                user_message=user_message,
+                intent=intent,
+                response_text=response_text,
+                matched_sources_count=len(cleaned_sources)
+            )
+        except Exception as db_err:
+            logger.error(f"Failed to write chat log to database: {db_err}")
+
         logger.info("=" * 60)
         logger.info(f"FINAL OUTGOING RESPONSE: '{response_text[:150]}...'")
         logger.info("=" * 60)
@@ -170,3 +179,111 @@ def api_chat(request):
     except Exception as e:
         logger.exception(f"Error in api_chat view: {e}")
         return JsonResponse({"error": "Internal server error occurred."}, status=500)
+
+
+def admin_dashboard(request):
+    """
+    Renders the custom admin dashboard with statistics and settings.
+    """
+    from chatbot.models import ChatBotSetting, ScraperLog, ChatLog
+    from django.db.models import Count
+
+    # 1. Fetch dynamic settings or defaults
+    match_threshold = ChatBotSetting.get_val("MATCH_THRESHOLD", "0.30")
+    match_count = ChatBotSetting.get_val("MATCH_COUNT", "3")
+    scraper_auto_run = ChatBotSetting.get_val("SCRAPER_AUTO_RUN", "False")
+    scraper_interval = ChatBotSetting.get_val("SCRAPER_INTERVAL_MINUTES", "1440")
+
+    # 2. Get statistics
+    supabase_service = get_supabase_service()
+    total_fatwas = supabase_service.get_total_fatwas_count()
+
+    total_queries = ChatLog.objects.count()
+
+    # Intent breakdown
+    intent_stats = ChatLog.objects.values('intent').annotate(count=Count('intent')).order_by('-count')
+
+    # Latest chat logs
+    recent_chats = ChatLog.objects.all()[:15]
+
+    # Scraper logs history
+    scraper_logs = ScraperLog.objects.all()[:15]
+
+    # Get last successful scrape run time
+    last_success_run = ScraperLog.objects.filter(status='SUCCESS').order_by('-end_time').first()
+
+    context = {
+        "settings": {
+            "match_threshold": match_threshold,
+            "match_count": match_count,
+            "scraper_auto_run": scraper_auto_run.lower() == "true",
+            "scraper_interval": scraper_interval,
+        },
+        "stats": {
+            "total_fatwas": total_fatwas,
+            "total_queries": total_queries,
+            "intent_stats": list(intent_stats),
+            "last_success_run": last_success_run,
+        },
+        "recent_chats": recent_chats,
+        "scraper_logs": scraper_logs,
+    }
+
+    return render(request, "chatbot/admin_dashboard.html", context)
+
+
+from django.shortcuts import redirect
+
+def save_settings(request):
+    """
+    Saves RAG and Scraper parameters to ChatBotSetting database.
+    """
+    from chatbot.models import ChatBotSetting
+    import os
+
+    if request.method == "POST":
+        match_threshold = request.POST.get("match_threshold", "0.30")
+        match_count = request.POST.get("match_count", "3")
+        scraper_auto_run = request.POST.get("scraper_auto_run") == "on"
+        scraper_interval = request.POST.get("scraper_interval", "1440")
+
+        ChatBotSetting.set_val("MATCH_THRESHOLD", match_threshold, "Similarity threshold for pgvector match_fatwas (e.g. 0.30)")
+        ChatBotSetting.set_val("MATCH_COUNT", match_count, "Maximum number of fatwa matches retrieved for LLM context")
+        ChatBotSetting.set_val("SCRAPER_AUTO_RUN", str(scraper_auto_run), "Enable/disable automatic background scraper running on Django startup")
+        ChatBotSetting.set_val("SCRAPER_INTERVAL_MINUTES", scraper_interval, "Periodic scraper run interval in minutes")
+
+        # Also update os.environ dynamically for the active process
+        os.environ["SCRAPER_AUTO_RUN"] = str(scraper_auto_run)
+        os.environ["SCRAPER_INTERVAL_MINUTES"] = scraper_interval
+
+    return redirect("chatbot:admin_dashboard")
+
+
+@csrf_exempt
+def run_scraper_api(request):
+    """
+    API endpoint to trigger a quick manual scraper run (max 1 page, 10 posts).
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "POST method required"}, status=405)
+
+    try:
+        from chatbot.services.scraper import FatwaScraper
+        scraper = FatwaScraper()
+        
+        # Run incremental scrape (quick test limit to 1 page with 10 posts for dashboard AJAX)
+        results = scraper.run_scrape(max_pages=1, per_page=10, consecutive_existing_limit=3, full_scan=False)
+        return JsonResponse({
+            "success": True,
+            "added": results.get("added", 0),
+            "skipped": results.get("skipped", 0),
+            "summary": results.get("summary", "")
+        })
+    except Exception as e:
+        logger.error(f"Error running scraper from dashboard: {e}")
+        return JsonResponse({
+            "success": False,
+            "error": str(e)
+        }, status=500)
+
+

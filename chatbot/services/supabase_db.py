@@ -45,3 +45,48 @@ class SupabaseService:
         except Exception as e:
             logger.exception(f"Error querying match_fatwas RPC: {e}")
             return []
+
+    def fatwa_exists(self, fatwa_id) -> bool:
+        """
+        Checks if a fatwa with the given ID already exists in the database.
+        """
+        if not self.client:
+            logger.error("Supabase client is not initialized.")
+            return False
+        try:
+            response = self.client.table("fatwas").select("id").eq("id", fatwa_id).execute()
+            return len(response.data) > 0
+        except Exception as e:
+            logger.error(f"Error checking if fatwa exists (ID {fatwa_id}): {e}")
+            return False
+
+    def upsert_fatwa(self, fatwa_data: dict) -> bool:
+        """
+        Upserts a fatwa record into the 'fatwas' table.
+        """
+        if not self.client:
+            logger.error("Supabase client is not initialized.")
+            return False
+        try:
+            self.client.table("fatwas").upsert(fatwa_data).execute()
+            return True
+        except Exception as e:
+            logger.error(f"Error upserting fatwa (ID {fatwa_data.get('id')}): {e}")
+            return False
+
+    def get_total_fatwas_count(self) -> int:
+        """
+        Queries Supabase to get the total number of records in the 'fatwas' table.
+        """
+        if not self.client:
+            logger.error("Supabase client is not initialized.")
+            return 0
+        try:
+            # Postgrest select with exact count
+            response = self.client.table("fatwas").select("id", count="exact").limit(1).execute()
+            return response.count if response.count is not None else 0
+        except Exception as e:
+            logger.error(f"Error getting fatwas count from Supabase: {e}")
+            return 0
+
+

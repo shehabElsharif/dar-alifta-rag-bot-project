@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دار الإفتاء الليبية - لوحة تحكم المساعد الفقهي</title>
+    
+    <!-- Google Fonts: Cairo & Amiri -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            /* HSL Color Palette - Islamic Deep Green & Gold */
+            --bg-color: HSL(220, 24%, 6%);
+            --header-bg: HSL(220, 24%, 4%);
+            --card-bg: HSL(220, 20%, 10%);
+            --card-glass: hsla(220, 20%, 10%, 0.75);
+            --border-color: HSL(160, 20%, 14%);
+            
+            --primary-emerald: HSL(160, 84%, 14%);
+            --primary-emerald-hover: HSL(160, 84%, 18%);
+            --primary-emerald-glow: hsla(160, 84%, 14%, 0.35);
+            
+            --accent-gold: HSL(45, 90%, 55%);
+            --accent-gold-hover: HSL(45, 90%, 65%);
+            --accent-gold-glow: hsla(45, 90%, 55%, 0.25);
+            
+            --success-color: HSL(120, 50%, 40%);
+            --error-color: HSL(0, 70%, 50%);
+            --warning-color: HSL(35, 80%, 50%);
+            
+            --text-main: HSL(0, 0%, 94%);
+            --text-muted: HSL(220, 10%, 65%);
+            --text-glow: hsla(0, 0%, 94%, 0.05);
+
+            --radius-lg: 20px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-emerald) var(--bg-color);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-emerald);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-emerald-hover);
+        }
+
+        body {
+            font-family: 'Cairo', 'Amiri', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            background: linear-gradient(135deg, var(--bg-color) 0%, HSL(220, 24%, 3%) 100%);
+        }
+
+        /* Navbar Header */
+        header {
+            background-color: var(--header-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .brand-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-logo {
+            color: var(--accent-gold);
+            font-size: 2rem;
+            filter: drop-shadow(0 0 8px var(--accent-gold-glow));
+        }
+
+        .brand-title h1 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: 0.5px;
+        }
+
+        .brand-title p {
+            font-size: 0.8rem;
+            color: var(--accent-gold);
+            font-family: 'Amiri', serif;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn-nav {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-sm);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-nav-primary {
+            background-color: var(--primary-emerald);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-nav-primary:hover {
+            background-color: var(--primary-emerald-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--primary-emerald-glow);
+        }
+
+        /* Main Content Grid */
+        main {
+            flex-grow: 1;
+            padding: 2rem;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Metrics Row */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .metric-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-gold);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+        }
+
+        .metric-info h3 {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .metric-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .metric-subtext {
+            font-size: 0.8rem;
+            color: var(--accent-gold);
+            margin-top: 0.4rem;
+        }
+
+        .metric-icon {
+            font-size: 2.5rem;
+            color: var(--primary-emerald);
+            opacity: 0.8;
+            filter: drop-shadow(0 0 10px var(--primary-emerald-glow));
+        }
+
+        .metric-card:nth-child(2) .metric-icon {
+            color: var(--accent-gold);
+            filter: drop-shadow(0 0 10px var(--accent-gold-glow));
+        }
+
+        /* Status Badge */
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        .badge-success {
+            background-color: hsla(120, 50%, 40%, 0.2);
+            color: HSL(120, 50%, 65%);
+            border: 1px solid HSL(120, 50%, 40%);
+        }
+
+        .badge-error {
+            background-color: hsla(0, 70%, 50%, 0.2);
+            color: HSL(0, 70%, 70%);
+            border: 1px solid HSL(0, 70%, 50%);
+        }
+
+        .badge-warning {
+            background-color: hsla(35, 80%, 50%, 0.2);
+            color: HSL(35, 80%, 70%);
+            border: 1px solid HSL(35, 80%, 50%);
+        }
+
+        /* Main Workspace: Left (Controls), Right (Stats) */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .workspace-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .panel-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--accent-gold);
+        }
+
+        /* Settings Form */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group select {
+            width: 100%;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-sm);
+            outline: none;
+            transition: var(--transition);
+            font-size: 0.95rem;
+        }
+
+        .form-group input[type="text"]:focus,
+        .form-group input[type="number"]:focus,
+        .form-group select:focus {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 8px var(--accent-gold-glow);
+        }
+
+        .form-group .description {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Switch toggle CSS */
+        .switch-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: rgba(255,255,255,0.02);
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .switch-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--bg-color);
+            transition: .4s;
+            border-radius: 34px;
+            border: 1px solid var(--border-color);
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: var(--text-muted);
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-emerald);
+            border-color: var(--border-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+            background-color: var(--accent-gold);
+        }
+
+        /* Buttons Control Group */
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-emerald);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-emerald-hover);
+            box-shadow: 0 4px 15px var(--primary-emerald-glow);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--accent-gold);
+            border: 1px solid var(--accent-gold);
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(229, 177, 58, 0.08);
+            box-shadow: 0 4px 15px var(--accent-gold-glow);
+        }
+
+        /* Scraper Running State */
+        .btn-secondary:disabled {
+            border-color: var(--text-muted);
+            color: var(--text-muted);
+            background-color: transparent;
+            cursor: not-allowed;
+        }
+
+        /* Custom Progress Bars (Intent distribution) */
+        .intent-progress-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .intent-row {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .intent-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .intent-name {
+            color: var(--text-main);
+        }
+
+        .intent-count {
+            color: var(--accent-gold);
+        }
+
+        .progress-bar-bg {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            background: linear-gradient(90deg, var(--primary-emerald) 0%, var(--accent-gold) 100%);
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Log Tables Section */
+        .logs-section {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .tabs-header {
+            display: flex;
+            gap: 15px;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 1.5rem;
+            padding-bottom: 2px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.8rem 1.2rem;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+        }
+
+        .tab-btn.active {
+            color: var(--accent-gold);
+        }
+
+        .tab-btn.active:after {
+            content: "";
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-color: var(--accent-gold);
+            border-radius: 3px;
+            box-shadow: 0 0 10px var(--accent-gold-glow);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Table CSS */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: right;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background-color: rgba(255, 255, 255, 0.02);
+            color: var(--accent-gold);
+            padding: 1rem;
+            font-weight: 700;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-main);
+            vertical-align: middle;
+        }
+
+        tr:hover td {
+            background-color: rgba(255, 255, 255, 0.01);
+        }
+
+        .text-truncate-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 320px;
+            line-height: 1.4;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+
+        /* Live Scraper Run Overlay/Popup Alert */
+        .scraper-toast {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            transform: translateY(150%);
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-width: 400px;
+        }
+
+        .scraper-toast.show {
+            transform: translateY(0);
+        }
+
+        .toast-icon {
+            font-size: 1.8rem;
+            color: var(--accent-gold);
+        }
+
+        .toast-content h4 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .toast-content p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            animation: spin 1.5s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(-360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand-container">
+            <i class="fa-solid fa-kaaba brand-logo"></i>
+            <div class="brand-title">
+                <h1>دار الإفتاء الليبية</h1>
+                <p>لوحة تحكم إعدادات وإحصائيات المساعد الفقهي</p>
+            </div>
+        </div>
+        
+        <div class="nav-actions">
+            <a href="{% url 'chatbot:chat_page' %}" class="btn-nav btn-nav-primary">
+                <i class="fa-solid fa-comments"></i>
+                <span>العودة للمحادثة الفقهية</span>
+            </a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Metrics Summary Cards -->
+        <section class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-info">
+                    <h3>إجمالي الفتاوى المؤرشفة</h3>
+                    <div class="metric-value" id="stats-fatwas-count">{{ stats.total_fatwas }}</div>
+                    <div class="metric-subtext">مخزنة في قاعدة بيانات Supabase</div>
+                </div>
+                <div class="metric-icon">
+                    <i class="fa-solid fa-book-open"></i>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-info">
+                    <h3>إجمالي الأسئلة المستفسرة</h3>
+                    <div class="metric-value">{{ stats.total_queries }}</div>
+                    <div class="metric-subtext">عمليات بحث ومحادثات تم تسجيلها</div>
+                </div>
+                <div class="metric-icon">
+                    <i class="fa-solid fa-magnifying-glass-chart"></i>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-info">
+                    <h3>حالة فحص الموقع الدوري</h3>
+                    <div class="metric-value" style="font-size: 1.6rem; margin-top: 0.3rem;">
+                        {% if stats.last_success_run %}
+                            <span class="badge badge-success">
+                                <i class="fa-solid fa-circle-check"></i>
+                                فعال
+                            </span>
+                        {% else %}
+                            <span class="badge badge-warning">
+                                <i class="fa-solid fa-clock"></i>
+                                لم يفحص بعد
+                            </span>
+                        {% endif %}
+                    </div>
+                    <div class="metric-subtext">
+                        {% if stats.last_success_run %}
+                            آخر نجاح: {{ stats.last_success_run.end_time|date:"Y-m-d H:i" }}
+                        {% else %}
+                            لا توجد سجلات ناجحة
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="metric-icon">
+                    <i class="fa-solid fa-network-wired"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dynamic Controls & Analytics Workspace -->
+        <section class="workspace-grid">
+            
+            <!-- Control Panel (Left column) -->
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>إعدادات النظام الفقهي</span>
+                </div>
+                
+                <form action="{% url 'chatbot:save_settings' %}" method="POST" style="display: flex; flex-direction: column; gap: 1.2rem;">
+                    {% csrf_token %}
+                    
+                    <div class="form-group">
+                        <label for="match_threshold">عتبة التطابق الدلالي (Similarity Threshold)</label>
+                        <input type="number" id="match_threshold" name="match_threshold" step="0.05" min="0.10" max="0.95" value="{{ settings.match_threshold }}" required>
+                        <span class="description">القيمة العتبية الدنيا لـ pgvector لاسترجاع الفتاوى من Supabase (الافتراضي 0.30). قيم أعلى تعني تطابق أكثر دقة ولكن فتاوى أقل.</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="match_count">عدد الفتاوى المرجعية في السياق (Max Matches)</label>
+                        <input type="number" id="match_count" name="match_count" min="1" max="10" value="{{ settings.match_count }}" required>
+                        <span class="description">أقصى عدد من الفتاوى التي سيتم إرفاقها لنموذج الذكاء الاصطناعي كمرجع للإجابة (الافتراضي 3).</span>
+                    </div>
+
+                    <div class="switch-container">
+                        <span class="switch-label">الفحص والجمع التلقائي للفتاوى بالخلفية</span>
+                        <label class="switch">
+                            <input type="checkbox" name="scraper_auto_run" {% if settings.scraper_auto_run %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="scraper_interval">الفاصل الزمني للفحص التلقائي (بالدقائق)</label>
+                        <input type="number" id="scraper_interval" name="scraper_interval" min="5" value="{{ settings.scraper_interval }}" required>
+                        <span class="description">معدل تكرار تشغيل الفاحص التدريجي في الخلفية (مثال: 1440 دقيقة تعادل 24 ساعة).</span>
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            <span>حفظ تكوين النظام</span>
+                        </button>
+                        
+                        <button type="button" id="btn-trigger-scraper" class="btn btn-secondary">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                            <span>بدء جلب الفتاوى الجديدة الآن</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Analytics Dashboard (Right column) -->
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>تحليلات نية أسئلة المستخدمين</span>
+                </div>
+
+                <div class="intent-progress-container">
+                    {% if stats.intent_stats %}
+                        {% for item in stats.intent_stats %}
+                            <div class="intent-row">
+                                <div class="intent-header">
+                                    <span class="intent-name">
+                                        {% if item.intent == 'FATWA_QUERY' %}
+                                            <i class="fa-solid fa-book-quran" style="color: var(--accent-gold); margin-left: 6px;"></i>
+                                            سؤال شرعي فقهي (FATWA_QUERY)
+                                        {% elif item.intent == 'GREETING' %}
+                                            <i class="fa-solid fa-handshake" style="color: HSL(120, 50%, 65%); margin-left: 6px;"></i>
+                                            تحية ومجاملة (GREETING)
+                                        {% elif item.intent == 'OUT_OF_SCOPE' %}
+                                            <i class="fa-solid fa-ban" style="color: var(--error-color); margin-left: 6px;"></i>
+                                            خارج الاختصاص (OUT_OF_SCOPE)
+                                        {% else %}
+                                            <i class="fa-solid fa-circle-question" style="color: var(--text-muted); margin-left: 6px;"></i>
+                                            غير مصنف ({{ item.intent }})
+                                        {% endif %}
+                                    </span>
+                                    <span class="intent-count">{{ item.count }} استعلام</span>
+                                </div>
+                                <div class="progress-bar-bg">
+                                    <div class="progress-bar-fill" data-count="{{ item.count }}"></div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fa-solid fa-chart-line" style="font-size: 2.5rem; display: block; margin-bottom: 1rem;"></i>
+                            <span>لا تتوفر إحصائيات أسئلة حتى الآن. ابدأ بطرح بعض الأسئلة في المحادثة أولاً.</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+
+        <!-- System Activity logs and tables -->
+        <section class="logs-section">
+            <div class="tabs-header">
+                <button class="tab-btn active" onclick="switchTab('tab-chats', this)">
+                    <i class="fa-solid fa-comment-dots"></i>
+                    سجل آخر عمليات البحث والاستفسارات
+                </button>
+                <button class="tab-btn" onclick="switchTab('tab-scraper', this)">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    سجل تاريخ فحص فتاوى الموقع
+                </button>
+            </div>
+
+            <!-- Chat logs tab -->
+            <div id="tab-chats" class="tab-content active">
+                <div class="table-responsive">
+                    {% if recent_chats %}
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>الوقت والتاريخ</th>
+                                    <th>سؤال المستخدم</th>
+                                    <th>تصنيف النية</th>
+                                    <th>فتاوى مطابقة</th>
+                                    <th>إجابة المساعد الفقهي المقترحة</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for chat in recent_chats %}
+                                    <tr>
+                                        <td style="white-space: nowrap; font-size: 0.8rem; color: var(--text-muted);">
+                                            {{ chat.timestamp|date:"Y-m-d H:i:s" }}
+                                        </td>
+                                        <td>
+                                            <span class="text-truncate-2" title="{{ chat.user_message }}">{{ chat.user_message }}</span>
+                                        </td>
+                                        <td>
+                                            {% if chat.intent == 'FATWA_QUERY' %}
+                                                <span class="badge badge-success">فقهي</span>
+                                            {% elif chat.intent == 'GREETING' %}
+                                                <span class="badge badge-success" style="background-color: hsla(200, 50%, 40%, 0.2); color: HSL(200, 50%, 70%); border-color: HSL(200, 50%, 40%);">ترحيب</span>
+                                            {% elif chat.intent == 'OUT_OF_SCOPE' %}
+                                                <span class="badge badge-error">خارج النطاق</span>
+                                            {% else %}
+                                                <span class="badge badge-warning">{{ chat.intent }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td style="text-align: center; font-weight: 700; color: var(--accent-gold);">
+                                            {{ chat.matched_sources_count }}
+                                        </td>
+                                        <td>
+                                            <span class="text-truncate-2" title="{{ chat.response_text }}" style="font-size: 0.85rem; color: var(--text-muted);">
+                                                {{ chat.response_text }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fa-solid fa-envelope-open" style="font-size: 2.5rem; display: block; margin-bottom: 1rem;"></i>
+                            <span>لا توجد سجلات محادثة بعد.</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Scraper logs tab -->
+            <div id="tab-scraper" class="tab-content">
+                <div class="table-responsive">
+                    {% if scraper_logs %}
+                        <table id="scraper-logs-table">
+                            <thead>
+                                <tr>
+                                    <th>تاريخ البدء</th>
+                                    <th>تاريخ الانتهاء</th>
+                                    <th>الحالة</th>
+                                    <th>فتاوى جديدة مضافة</th>
+                                    <th>فتاوى مكررة تم تجاوزها</th>
+                                    <th>تفاصيل وملخص العملية</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in scraper_logs %}
+                                    <tr>
+                                        <td style="white-space: nowrap; font-size: 0.8rem; color: var(--text-muted);">
+                                            {{ log.start_time|date:"Y-m-d H:i:s" }}
+                                        </td>
+                                        <td style="white-space: nowrap; font-size: 0.8rem; color: var(--text-muted);">
+                                            {% if log.end_time %}
+                                                {{ log.end_time|date:"Y-m-d H:i:s" }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if log.status == 'SUCCESS' %}
+                                                <span class="badge badge-success">ناجح</span>
+                                            {% elif log.status == 'RUNNING' %}
+                                                <span class="badge badge-warning">قيد التنفيذ</span>
+                                            {% else %}
+                                                <span class="badge badge-error">فشل</span>
+                                            {% endif %}
+                                        </td>
+                                        <td style="text-align: center; font-weight: 700; color: HSL(120, 50%, 65%);">
+                                            {{ log.added_count }}
+                                        </td>
+                                        <td style="text-align: center; font-weight: 700; color: var(--text-muted);">
+                                            {{ log.skipped_count }}
+                                        </td>
+                                        <td style="font-size: 0.85rem; color: var(--text-muted);">
+                                            {{ log.summary }}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fa-solid fa-database" style="font-size: 2.5rem; display: block; margin-bottom: 1rem;"></i>
+                            <span>لا توجد سجلات لعمليات الفحص والجمع حتى الآن.</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Toast Notification for background running Scraper -->
+    <div id="scraper-toast" class="scraper-toast">
+        <div class="toast-icon">
+            <i id="toast-spinner-icon" class="fa-solid fa-arrows-rotate spinner"></i>
+        </div>
+        <div class="toast-content">
+            <h4 id="toast-title">جاري جلب وتحديث الفتاوى...</h4>
+            <p id="toast-body">يتصل النظام بموقع دار الإفتاء الليبية ويتحقق من الفتاوى الجديدة.</p>
+        </div>
+    </div>
+
+    <script>
+        // Custom Tab switching logic
+        function switchTab(tabId, btn) {
+            // Hide all tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-btn').forEach(button => {
+                button.classList.remove('active');
+            });
+            // Show current tab content and make button active
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // Render percentage width for Intent progress bars on load
+        window.addEventListener('DOMContentLoaded', () => {
+            const bars = document.querySelectorAll('.progress-bar-fill');
+            let total = 0;
+            
+            // Calculate sum
+            bars.forEach(bar => {
+                total += parseInt(bar.getAttribute('data-count') || 0);
+            });
+
+            // Set percentage width
+            bars.forEach(bar => {
+                const count = parseInt(bar.getAttribute('data-count') || 0);
+                const pct = total > 0 ? (count / total * 100) : 0;
+                bar.style.width = `${pct}%`;
+            });
+        });
+
+        // Trigger manual Scraper run via AJAX
+        const scraperBtn = document.getElementById('btn-trigger-scraper');
+        const scraperToast = document.getElementById('scraper-toast');
+        const toastTitle = document.getElementById('toast-title');
+        const toastBody = document.getElementById('toast-body');
+        const toastIcon = document.getElementById('toast-spinner-icon');
+
+        if (scraperBtn) {
+            scraperBtn.addEventListener('click', () => {
+                // Disable button
+                scraperBtn.disabled = true;
+                scraperBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate spinner"></i> <span>جاري فحص وجلب البيانات...</span>';
+                
+                // Show toast
+                toastTitle.innerText = "جاري فحص وتحديث الفتاوى...";
+                toastBody.innerText = "يتصل النظام بموقع دار الإفتاء الليبية ويتحقق من الفتاوى الجديدة.";
+                toastIcon.className = "fa-solid fa-arrows-rotate spinner";
+                scraperToast.classList.add('show');
+
+                // AJAX Request to views.run_scraper_api
+                fetch("{% url 'chatbot:run_scraper_api' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        toastTitle.innerText = "اكتمل جلب الفتاوى بنجاح!";
+                        toastBody.innerText = data.summary;
+                        toastIcon.className = "fa-solid fa-circle-check";
+                        toastIcon.style.color = "var(--success-color)";
+                        
+                        // Update total count on card if element exists
+                        const fatwasCountEl = document.getElementById('stats-fatwas-count');
+                        if (fatwasCountEl) {
+                            // Fetch fresh count or calculate dynamically
+                            const current = parseInt(fatwasCountEl.innerText);
+                            fatwasCountEl.innerText = current + data.added;
+                        }
+
+                        // Reload page after a delay to show updated log tables and analytics
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 3000);
+                    } else {
+                        showErrorToast(data.error || "فشل غير معروف أثناء جلب البيانات.");
+                    }
+                })
+                .catch(error => {
+                    showErrorToast(error.message || "حدث خطأ بالشبكة أثناء محاولة الجلب.");
+                })
+                .finally(() => {
+                    // Re-enable button after delay
+                    setTimeout(() => {
+                        scraperBtn.disabled = false;
+                        scraperBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> <span>بدء جلب الفتاوى الجديدة الآن</span>';
+                    }, 3000);
+                });
+            });
+        }
+
+        function showErrorToast(message) {
+            toastTitle.innerText = "خطأ أثناء جلب الفتاوى";
+            toastBody.innerText = message;
+            toastIcon.className = "fa-solid fa-circle-exclamation";
+            toastIcon.style.color = "var(--error-color)";
+            
+            // Hide toast after 6 seconds
+            setTimeout(() => {
+                scraperToast.classList.remove('show');
+            }, 6000);
+        }
+    </script>
+</body>
+</html>
