@@ -29,7 +29,22 @@ SECRET_KEY = 'django-insecure--%(xy+=_)y1uqj+lyk=ceo5dbo2k9s*c6ve#a21uikffm7&1#8
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    '*',
+    '164.68.98.8',
+    'dar-alifta.developing.com.ly',
+    'localhost',
+    '127.0.0.1',
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    'http://dar-alifta.developing.com.ly',
+    'https://dar-alifta.developing.com.ly',
+]
+
+# Trust HTTPS from Nginx reverse proxy
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
 
 
 # Application definition
@@ -120,6 +135,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 LOGGING = {
     'version': 1,
@@ -143,3 +159,7 @@ LOGGING = {
         },
     },
 }
+
+# Custom admin dashboard password protection
+DASHBOARD_PASSWORD = os.getenv("DASHBOARD_PASSWORD", "12345678")
+

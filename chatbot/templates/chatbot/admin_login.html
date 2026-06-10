@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دار الإفتاء الليبية - تسجيل الدخول للوحة التحكم</title>
+    
+    <!-- Google Fonts: Cairo & Amiri -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            /* HSL Color Palette - Islamic Deep Green & Gold */
+            --bg-color: HSL(220, 24%, 6%);
+            --card-bg: HSL(220, 20%, 10%);
+            --card-glass: hsla(220, 20%, 10%, 0.75);
+            --border-color: HSL(160, 20%, 14%);
+            
+            --primary-emerald: HSL(160, 84%, 14%);
+            --primary-emerald-hover: HSL(160, 84%, 18%);
+            --primary-emerald-glow: hsla(160, 84%, 14%, 0.35);
+            
+            --accent-gold: HSL(45, 90%, 55%);
+            --accent-gold-hover: HSL(45, 90%, 65%);
+            --accent-gold-glow: hsla(45, 90%, 55%, 0.25);
+            
+            --error-color: HSL(0, 70%, 50%);
+            --error-bg: hsla(0, 70%, 50%, 0.15);
+            
+            --text-main: HSL(0, 0%, 94%);
+            --text-muted: HSL(220, 10%, 65%);
+            
+            --radius-lg: 20px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Cairo', 'Amiri', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, var(--bg-color) 0%, HSL(220, 24%, 3%) 100%);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Ambient glowing backgrounds */
+        body::before {
+            content: "";
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: var(--primary-emerald-glow);
+            border-radius: 50%;
+            top: 10%;
+            right: 15%;
+            filter: blur(120px);
+            z-index: 1;
+        }
+
+        body::after {
+            content: "";
+            position: absolute;
+            width: 250px;
+            height: 250px;
+            background: var(--accent-gold-glow);
+            border-radius: 50%;
+            bottom: 15%;
+            left: 15%;
+            filter: blur(100px);
+            z-index: 1;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 450px;
+            padding: 20px;
+            z-index: 10;
+            animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .login-card {
+            background-color: var(--card-glass);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 2.5rem;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(12px);
+            display: flex;
+            flex-direction: column;
+            gap: 1.8rem;
+        }
+
+        .brand-header {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-logo {
+            color: var(--accent-gold);
+            font-size: 3rem;
+            filter: drop-shadow(0 0 12px var(--accent-gold-glow));
+            animation: pulse 3s infinite ease-in-out;
+        }
+
+        .brand-title h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .brand-title p {
+            font-size: 0.9rem;
+            color: var(--accent-gold);
+            font-family: 'Amiri', serif;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .password-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-wrapper input {
+            width: 100%;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 0.8rem 1rem 0.8rem 2.8rem;
+            border-radius: var(--radius-md);
+            outline: none;
+            transition: var(--transition);
+            font-size: 1rem;
+            text-align: left;
+            direction: ltr;
+        }
+
+        .password-wrapper input:focus {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 10px var(--accent-gold-glow);
+        }
+
+        .toggle-password {
+            position: absolute;
+            left: 12px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: var(--transition);
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toggle-password:hover {
+            color: var(--accent-gold);
+        }
+
+        .error-message {
+            background-color: var(--error-bg);
+            border: 1px solid var(--error-color);
+            color: HSL(0, 70%, 75%);
+            border-radius: var(--radius-sm);
+            padding: 0.8rem 1rem;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 0.9rem 1.5rem;
+            background-color: var(--primary-emerald);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-submit:hover {
+            background-color: var(--primary-emerald-hover);
+            box-shadow: 0 4px 15px var(--primary-emerald-glow);
+            transform: translateY(-2px);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+
+        .back-link a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .back-link a:hover {
+            color: var(--accent-gold);
+        }
+
+        /* Animations */
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 12px var(--accent-gold-glow)); }
+            50% { transform: scale(1.05); filter: drop-shadow(0 0 20px var(--accent-gold-glow)); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="login-card">
+            <div class="brand-header">
+                <i class="fa-solid fa-kaaba brand-logo"></i>
+                <div class="brand-title">
+                    <h1>دار الإفتاء الليبية</h1>
+                    <p>تسجيل الدخول للوحة التحكم</p>
+                </div>
+            </div>
+
+            {% if error %}
+            <div class="error-message">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span>{{ error }}</span>
+            </div>
+            {% endif %}
+
+            <form action="{% url 'chatbot:admin_dashboard' %}" method="POST" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="password">كلمة المرور</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="password" name="password" placeholder="••••••••" required autofocus>
+                        <button type="button" class="toggle-password" id="btn-toggle-password" title="عرض/إخفاء كلمة المرور">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    <span>دخول</span>
+                </button>
+            </form>
+
+            <div class="back-link">
+                <a href="{% url 'chatbot:chat_page' %}">
+                    <i class="fa-solid fa-arrow-right"></i>
+                    <span>العودة للمحادثة الفقهية</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const passwordInput = document.getElementById('password');
+        const toggleBtn = document.getElementById('btn-toggle-password');
+        
+        toggleBtn.addEventListener('click', () => {
+            const isPassword = passwordInput.getAttribute('type') === 'password';
+            passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+            toggleBtn.innerHTML = isPassword ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+        });
+    </script>
+</body>
+</html>

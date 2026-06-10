@@ -181,6 +181,21 @@ def api_chat(request):
         return JsonResponse({"error": "Internal server error occurred."}, status=500)
 
 
+from django.conf import settings
+from functools import wraps
+from django.shortcuts import redirect
+
+def dashboard_auth_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.session.get("is_dashboard_admin", False):
+            if request.headers.get("x-requested-with") == "XMLHttpRequest" or request.path.endswith("/run-scraper/"):
+                return JsonResponse({"success": False, "error": "غير مصرح بالدخول. يرجى تسجيل الدخول أولاً."}, status=403)
+            return redirect("chatbot:admin_dashboard")
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+
 def admin_dashboard(request):
     """
     Renders the custom admin dashboard with statistics and settings.
@@ -188,13 +203,32 @@ def admin_dashboard(request):
     from chatbot.models import ChatBotSetting, ScraperLog, ChatLog
     from django.db.models import Count
 
-    # 1. Fetch dynamic settings or defaults
+    # 1. Handle logout
+    if request.GET.get("logout") == "true":
+        request.session["is_dashboard_admin"] = False
+        return redirect("chatbot:admin_dashboard")
+
+    # 2. Handle login form submission
+    if request.method == "POST":
+        entered_password = request.POST.get("password")
+        correct_password = getattr(settings, "DASHBOARD_PASSWORD", "12345678")
+        if entered_password == correct_password:
+            request.session["is_dashboard_admin"] = True
+            return redirect("chatbot:admin_dashboard")
+        else:
+            return render(request, "chatbot/admin_login.html", {"error": "كلمة المرور غير صحيحة. يرجى المحاولة مرة أخرى."})
+
+    # 3. Handle GET request - check authentication
+    if not request.session.get("is_dashboard_admin", False):
+        return render(request, "chatbot/admin_login.html")
+
+    # 4. Fetch dynamic settings or defaults
     match_threshold = ChatBotSetting.get_val("MATCH_THRESHOLD", "0.30")
     match_count = ChatBotSetting.get_val("MATCH_COUNT", "3")
     scraper_auto_run = ChatBotSetting.get_val("SCRAPER_AUTO_RUN", "False")
     scraper_interval = ChatBotSetting.get_val("SCRAPER_INTERVAL_MINUTES", "1440")
 
-    # 2. Get statistics
+    # 5. Get statistics
     supabase_service = get_supabase_service()
     total_fatwas = supabase_service.get_total_fatwas_count()
 
@@ -232,8 +266,7 @@ def admin_dashboard(request):
     return render(request, "chatbot/admin_dashboard.html", context)
 
 
-from django.shortcuts import redirect
-
+@dashboard_auth_required
 def save_settings(request):
     """
     Saves RAG and Scraper parameters to ChatBotSetting database.
@@ -260,6 +293,7 @@ def save_settings(request):
 
 
 @csrf_exempt
+@dashboard_auth_required
 def run_scraper_api(request):
     """
     API endpoint to trigger a quick manual scraper run (max 1 page, 10 posts).
@@ -285,5 +319,6 @@ def run_scraper_api(request):
             "success": False,
             "error": str(e)
         }, status=500)
+
 
 

@@ -148,6 +148,19 @@
             box-shadow: 0 4px 12px var(--primary-emerald-glow);
         }
 
+        .btn-nav-secondary-logout {
+            background-color: hsla(0, 70%, 50%, 0.15);
+            color: HSL(0, 70%, 75%);
+            border: 1px solid var(--error-color);
+        }
+
+        .btn-nav-secondary-logout:hover {
+            background-color: hsla(0, 70%, 50%, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px hsla(0, 70%, 50%, 0.3);
+            color: HSL(0, 70%, 85%);
+        }
+
         /* Main Content Grid */
         main {
             flex-grow: 1;
@@ -572,6 +585,7 @@
         .text-truncate-2 {
             display: -webkit-box;
             -webkit-line-clamp: 2;
+            line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -649,6 +663,10 @@
             <a href="{% url 'chatbot:chat_page' %}" class="btn-nav btn-nav-primary">
                 <i class="fa-solid fa-comments"></i>
                 <span>العودة للمحادثة الفقهية</span>
+            </a>
+            <a href="?logout=true" class="btn-nav btn-nav-secondary-logout">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>تسجيل الخروج</span>
             </a>
         </div>
     </header>
@@ -807,74 +825,13 @@
 
         <!-- System Activity logs and tables -->
         <section class="logs-section">
-            <div class="tabs-header">
-                <button class="tab-btn active" onclick="switchTab('tab-chats', this)">
-                    <i class="fa-solid fa-comment-dots"></i>
-                    سجل آخر عمليات البحث والاستفسارات
-                </button>
-                <button class="tab-btn" onclick="switchTab('tab-scraper', this)">
-                    <i class="fa-solid fa-clock-rotate-left"></i>
-                    سجل تاريخ فحص فتاوى الموقع
-                </button>
+            <div class="panel-title" style="margin-bottom: 1.5rem;">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span>سجل تاريخ فحص فتاوى الموقع</span>
             </div>
 
-            <!-- Chat logs tab -->
-            <div id="tab-chats" class="tab-content active">
-                <div class="table-responsive">
-                    {% if recent_chats %}
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>الوقت والتاريخ</th>
-                                    <th>سؤال المستخدم</th>
-                                    <th>تصنيف النية</th>
-                                    <th>فتاوى مطابقة</th>
-                                    <th>إجابة المساعد الفقهي المقترحة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for chat in recent_chats %}
-                                    <tr>
-                                        <td style="white-space: nowrap; font-size: 0.8rem; color: var(--text-muted);">
-                                            {{ chat.timestamp|date:"Y-m-d H:i:s" }}
-                                        </td>
-                                        <td>
-                                            <span class="text-truncate-2" title="{{ chat.user_message }}">{{ chat.user_message }}</span>
-                                        </td>
-                                        <td>
-                                            {% if chat.intent == 'FATWA_QUERY' %}
-                                                <span class="badge badge-success">فقهي</span>
-                                            {% elif chat.intent == 'GREETING' %}
-                                                <span class="badge badge-success" style="background-color: hsla(200, 50%, 40%, 0.2); color: HSL(200, 50%, 70%); border-color: HSL(200, 50%, 40%);">ترحيب</span>
-                                            {% elif chat.intent == 'OUT_OF_SCOPE' %}
-                                                <span class="badge badge-error">خارج النطاق</span>
-                                            {% else %}
-                                                <span class="badge badge-warning">{{ chat.intent }}</span>
-                                            {% endif %}
-                                        </td>
-                                        <td style="text-align: center; font-weight: 700; color: var(--accent-gold);">
-                                            {{ chat.matched_sources_count }}
-                                        </td>
-                                        <td>
-                                            <span class="text-truncate-2" title="{{ chat.response_text }}" style="font-size: 0.85rem; color: var(--text-muted);">
-                                                {{ chat.response_text }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    {% else %}
-                        <div class="empty-state">
-                            <i class="fa-solid fa-envelope-open" style="font-size: 2.5rem; display: block; margin-bottom: 1rem;"></i>
-                            <span>لا توجد سجلات محادثة بعد.</span>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- Scraper logs tab -->
-            <div id="tab-scraper" class="tab-content">
+            <!-- Scraper logs -->
+            <div id="tab-scraper" class="tab-content active">
                 <div class="table-responsive">
                     {% if scraper_logs %}
                         <table id="scraper-logs-table">
